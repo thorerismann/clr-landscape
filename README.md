@@ -18,4 +18,4 @@ Thi following packages are required:
 - pandas
 - seaborn
 
-*Note: it is recomended to install numbpy and numpy via conda-forge channel prior to installing nlmpy as some of the package dependencies did not load correctly without this.*
+*Note: it is recomended to install numba and numpy via conda-forge channel prior to installing nlmpy as some of the package dependencies did not load correctly without this.*
