@@ -10,24 +10,27 @@ from nlmpy import nlmpy
 import pandas as pd
 from dataclasses import dataclass
 import random
-
+import numpy as np
 datadir = "/home/tge/dev/rust-model/clr-landscape/data" 
-# First make the landscape using the neutral landscape model standard in landscape ecology
-# This is chosen as coffee is often planted in a patchwork of forest farms
-# quantititeis chosen follow The Paper
 
-############################################
-# define parameters
-#######################################
 
+
+    # First make the landscape using the neutral landscape model standard in landscape ecology
+    # This is chosen as coffee is often planted in a patchwork of forest farms
+    # quantititeis chosen follow The Paper
+    
+    ############################################
+    # define parameters
+    #######################################
+    
 # grid parameters
-size = 50 #x,y size of the grid
-cluster = 0.3 # cluster value ranging from 0-1 for neutral landscape model
-proportions = [0.25,0.75] # proportion of values in each category (0,1 coffee not coffee)
-plants_per_cell = 5 # number of plants in each cell
+size = 40 #x,y size of the grid
+cluster = 0.4 # cluster value ranging from 0-1 for neutral landscape model
+proportions = [0.4,0.6] # proportion of values in each category (0,1 coffee not coffee)
+plants_per_cell = 8 # number of plants in each cell
 
 # plant values
-max_production = 2000 # max production of berries per plant
+max_production = 4000 # typical production of coffee beans per plant
 resistance = 1 # base resistance of plant (none)
 production = 1 # percentage of max production of berries
 
@@ -87,10 +90,7 @@ class Plant:
             self.infection = 1
             
     def get_production(self):
-        if self.infection < 1:
-            self.production = 1-0.5*self.infection*max_production
-        else:
-            self.production = 0
+        self.production = (1-0.5*self.infection)*max_production
     
     def define_infectivity(self):
         # defines infectivity based on cutoff of days
@@ -166,7 +166,7 @@ def neighbor_cell_infection(gridscore):
     a = max(1,random.randint(0, len(healthy_neighbors)))
     if gridscore[1] < 0.6 or len(healthy_neighbors)<1:
         pass
-    else:
+    elif random.uniform(0,1)< 0.8:
         healthy_neighbors[a-1].infection = days
 
 def global_infection(grid_scores):
@@ -179,15 +179,16 @@ def global_infection(grid_scores):
         if total_score < 0.5:
             pass
         else:
-            a = random.randint(0,len(healthy))
-            b = random.randint(0,len(healthy))
-            c = random.randint(0,len(healthy))
+            a = random.randint(0,len(healthy)-1)
+            b = random.randint(0,len(healthy)-1)
+            c = random.randint(0,len(healthy)-1)
             healthy[a].infection = days
             healthy[b].infection = days
             healthy[c].infection = days
         
 
 def each_day():
+    """This function controls the whole program and runs it each day"""
     weather = weather_effects(day)
     inf_plants = [x for x in myplants if x.infection > 0.0001]
     [x.progression() for x in inf_plants]
@@ -222,6 +223,7 @@ def initial_infection():
     neighbors[c].infection = days
 
 def save_intermediate_infected():
+    """This function saves the intermediate spreads of CLR at day 0, 120, 240, 360"""
     infected = set([x.grid for x in myplants if x.infection > 0.0001])
     landscaped = landscape*1
     for index,row in landscaped.iterrows():
@@ -230,58 +232,66 @@ def save_intermediate_infected():
             if (index,column) in infected:
                 row[column] = 2
             column+=1
-    landscaped.to_csv(F"{datadir}/map-{day}.csv")
+    landscaped.to_csv(F"{datadir}/map-{day}-{z}-{proportions}-{cluster}.csv")
 
 # Put it all together
 
 # make the landscape and identify the coffee / not-coffee cells
-landscape = make_landscape(size,cluster)
-cafe = []
-not_cafe = []
-for index,row in landscape.iterrows():
-    c = []
-    nc = []
-    column = 0
-    while column < size:
-        if row[column]:
-            c.append((index,column))
-        else:
-            nc.append((index,column))
-        column+=1
-    cafe.extend(c)
-    not_cafe.extend(nc)
-
-# Create a user-specified number of instances of the Plant class for each cell with coffee in it
-
-myplants =[]
-for i in cafe:
-    for j in range(plants_per_cell):
-        myplants.append(Plant(grid = i, plant = j))
-
-# initialize infection
+returns = []
+runs = 10
+for z in range(0,runs):
+    landscape = make_landscape(size,cluster)
+    cafe = []
+    not_cafe = []
+    for index,row in landscape.iterrows():
+        c = []
+        nc = []
+        column = 0
+        while column < size:
+            if row[column]:
+                c.append((index,column))
+            else:
+                nc.append((index,column))
+            column+=1
+        cafe.extend(c)
+        not_cafe.extend(nc)
     
-initial_infection()     
-
-# Run code for each day       
-day = 0
-daily_results = []
-while day < 365:
-    daily_results.append(each_day())
-    if day%120==0:
-        save_intermediate_infected()
-        print(day)
-    day+=1
-
-# organize data
-# harvest berries
-day = 0
-
-def calculate_returns():
-    return sum([x.production() for x in myplants])
+    # Create a user-specified number of instances of the Plant class for each cell with coffee in it
     
+    myplants =[]
+    for i in cafe:
+        for j in range(plants_per_cell):
+            myplants.append(Plant(grid = i, plant = j))
+    
+    # initialize infection
+        
+    initial_infection()     
+    
+    # Run code for each day       
+    day = 0
+    returns = []
+    daily_results = []
+    while day < 365:
+        daily_results.append(each_day())
+        if day%120==0:
+            save_intermediate_infected()
+            print(day)
+        day+=1
+    
+    # organize data
+    # harvest berries
+    day = 0
+    
+    def calculate_returns():
+        [x.get_production() for x in myplants]
+        return sum([x.production for x in myplants])
+    
+    coffee_cherries = np.floor(calculate_returns())
+    returns.append((coffee_cherries,runs))
+    results = pd.DataFrame(daily_results)
+    results.columns = ["infection_score","infected_cells",'infected_plants','day']
+    results.to_csv(F"{datadir}/results-{z}-{proportions}-{cluster}.csv")
+    datadir = "/home/tge/dev/rust-model/clr-landscape/data" 
 
-results = pd.DataFrame(daily_results)
-results.columns = ["infection_score","infected_cells",'infected_plants','day']
-results.to_csv(F"{datadir}/results.csv")
-
-# create map
+b = pd.DataFrame(returns)
+b.to_csv(F"{datadir}/returns-{proportions}-{cluster}.csv")

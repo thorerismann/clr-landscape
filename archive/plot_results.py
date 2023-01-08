@@ -16,8 +16,8 @@ fig4 = np.genfromtxt(F'{datadir}/map-360.csv', delimiter=',')
 figs = [fig1,fig2,fig3,fig4]
 
 # Make classified colour map
-cmapClas = mpl.colors.ListedColormap(['#8dd3c7', '#ffffb3', '#bebada', '#fb8072'])
-bounds=[0,1,2,3,4]
+cmapClas = mpl.colors.ListedColormap(['#8dd3c7', '#ffffb3', '#bebada'])
+bounds=[-1,0.9,1.9,2.9]
 norm = mpl.colors.BoundaryNorm(bounds, cmapClas.N)
 
 fig, axs = plt.subplots(4, 1)
