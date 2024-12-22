@@ -19,8 +19,9 @@ This project simulates the spread of Coffee Leaf Rust (CLR) across a patchwork l
 - **nlmpy**
 - **numpy**
 - **pandas**
-- **seaborn** (recommended for plotting results)
-- **numba** (optional, but recommended to optimize some dependencies)
+- **numba**
+- **seaborn** (for plotting results)
+- **matplotlib** (for plotting results)
 
 > **Note:** It is often helpful to install `numba` and `numpy` via the `conda-forge` channel prior to installing `nlmpy`, because some dependencies may not load correctly otherwise.
 
@@ -29,10 +30,16 @@ This project simulates the spread of Coffee Leaf Rust (CLR) across a patchwork l
 1. **Install Dependencies**  
    - Recommended approach (e.g., via Conda):  
      ```bash
-     conda create -n clr_env python=3.9 -y
+     conda create -n clr_env python=3.10 -y
      conda activate clr_env
-     conda install -c conda-forge numpy numba
-     pip install nlmpy pandas seaborn
+     pip install numpy numby nlmpy scipy pandas
+     pip install matplotlib seaborn
+     ```
+   - From Requirements.txt:
+     ```bash
+     conda create -n clr_env python=3.10 -y
+     conda activate clr_env
+     pip install -r requirements.txt
      ```
 2. **Run the Script**  
    - Place this script in a directory with a `data/` folder (for saving outputs).
