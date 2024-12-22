@@ -15,6 +15,7 @@ from pathlib import Path
 
 datadir = Path.cwd() / 'data'
 figdir = Path.cwd() / 'figures'
+figdir.mkdir(exist_ok=True)
 
 proportions_used = [[0.1,0.9],[0.25,0.75],[0.4,0.6]]
 cluster_used = [0.2,0.3,0.4]
