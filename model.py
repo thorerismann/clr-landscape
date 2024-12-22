@@ -22,6 +22,7 @@ from typing import List, Tuple
 
 # Data directory path
 datadir: Path = Path.cwd() / "data"
+datadir.mkdir(exist_ok=True)
 
 # Grid parameters
 size: int = 40  # The x,y size of the grid.
