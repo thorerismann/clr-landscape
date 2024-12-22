@@ -11,14 +11,16 @@ import matplotlib as mpl
 import numpy as np
 import pandas as pd
 import seaborn as sns
+from pathlib import Path
 
-datadir = "/home/tge/dev/rust-model/clr-landscape/data" 
-figdir = "/home/tge/dev/rust-model/clr-landscape/figures"
+datadir = Path.cwd() / 'data'
+figdir = Path.cwd() / 'figures'
 
 proportions_used = [[0.1,0.9],[0.25,0.75],[0.4,0.6]]
 cluster_used = [0.2,0.3,0.4]
 
-plot run 5 of cluster = 0.3, proportions_used = [0.25]
+# plot run 5 of cluster = 0.3,
+# proportions_used = [0.25]
 
 fig1 = np.genfromtxt(F'{datadir}/map-0-5-[0.25, 0.75]-0.3.csv', delimiter=',')
 fig2 = np.genfromtxt(F'{datadir}/map-120-5-[0.25, 0.75]-0.3.csv', delimiter=',')
@@ -68,7 +70,7 @@ for z in proportions_used:
                 final = a
             else:
                 final = pd.concat([final,a],axis = 0)
-        
+
         sns.lineplot(data = final, x = "day",y = "infected_cells",hue = "run")
         plt.title(F"{z}, {k}")
         plt.savefig(F'{figdir}/infected-cells-{z}-{k}.png')
@@ -103,9 +105,9 @@ for i in proportions_used:
 
 df = pd.DataFrame(mylist)
 df.columns = ["trees","uninfected","infected","total_cafe","infected_percent","uninfected_percent","tree_percent","total_cafe_percent","proportions","clustering","run"]
-grouped_mean = pd.DataFrame(df.groupby(["proportions","clustering"])["uninfected_percent","total_cafe_percent"].mean())
-grouped_min = pd.DataFrame(df.groupby(["proportions","clustering"])["uninfected_percent"].min())
-grouped_max = pd.DataFrame(df.groupby(["proportions","clustering"])["uninfected_percent"].max())
+grouped_mean = df.groupby(["proportions", "clustering"])[["uninfected_percent", "total_cafe_percent"]].mean().reset_index()
+grouped_min = df.groupby(["proportions", "clustering"])[["uninfected_percent"]].min().reset_index()
+grouped_max = df.groupby(["proportions", "clustering"])[["uninfected_percent"]].max().reset_index()
 
 bottom = df.sort_values("uninfected_percent", ascending=True).head(10)
 bottom = (bottom[["uninfected_percent","tree_percent","infected_percent","proportions","clustering"]]).round(2)
